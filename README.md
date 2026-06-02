@@ -81,4 +81,4 @@ ReviewProcessor
 └─ sends email summary
 ---
 
-MIT - DIYA73 - built with heart.
+MIT - DIYA73 .
