@@ -81,4 +81,4 @@ ReviewProcessor
 └─ sends email summary
 ---
 
-MIT - DIYA73 .
+MIT - DIYA73 🤖 .
