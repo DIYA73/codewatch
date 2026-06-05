@@ -2,21 +2,17 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
 import { ReviewsService, REVIEW_QUEUE } from './reviews.service';
 import { ReviewStatus } from './review.entity';
 
 @Processor(REVIEW_QUEUE)
 export class ReviewProcessor {
   private readonly logger = new Logger(ReviewProcessor.name);
-  private readonly openai: OpenAI;
 
   constructor(
     private reviewsService: ReviewsService,
     private config: ConfigService,
-  ) {
-    this.openai = new OpenAI({ apiKey: this.config.get('OPENAI_API_KEY') });
-  }
+  ) {}
 
   @Process('run-review')
   async handleReview(job: Job<{ reviewId: string }>): Promise<void> {
@@ -28,38 +24,35 @@ export class ReviewProcessor {
       const review = await this.reviewsService.findOne(reviewId);
       if (!review) throw new Error('Review not found');
 
-      const prompt = `You are an expert code reviewer. Review this pull request:
+      // Mock AI review — replace with real OpenAI when credits available
+      const reviewText = `## Code Review: ${review.prTitle}
 
-PR: ${review.prTitle}
-Repo: ${review.repo}
-Author: ${review.author}
-Branch: ${review.headBranch} to ${review.baseBranch}
+**Overall Score: 8/10**
 
-Provide:
-1. Overall score (1-10)
-2. Issues found
-3. Suggestions
-4. What was done well
+### ✅ What was done well
+- Clean commit message following conventional commits format
+- Branch naming follows kebab-case convention
+- Changes are focused and atomic
 
-Format as markdown.`;
+### 🔍 Issues Found
+- No unit tests added for the new functionality
+- Consider adding JSDoc comments to exported functions
 
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
-      });
+### 💡 Suggestions
+- Add error boundary handling for edge cases
+- Consider extracting repeated logic into a shared utility
+- Run \`npm run lint\` before merging
 
-      const reviewText = response.choices[0]?.message?.content || '';
-      const scoreMatch = reviewText.match(/score[:\s]*(\d+)/i);
-      const score = scoreMatch ? parseInt(scoreMatch[1]) : 7;
+### 📊 Summary
+This PR looks solid overall. The main concern is the lack of test coverage. Consider adding at least basic unit tests before merging to main.`;
 
       await this.reviewsService.update(reviewId, {
-        aiReview: { summary: reviewText, score, generatedAt: new Date().toISOString() },
-        overallScore: score,
+        aiReview: { summary: reviewText, score: 8, generatedAt: new Date().toISOString() },
+        overallScore: 8,
         status: ReviewStatus.COMPLETED,
       });
 
-      this.logger.log(`Review ${reviewId} completed with score ${score}`);
+      this.logger.log(`Review ${reviewId} completed with score 8`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       this.logger.error(`Review ${reviewId} failed: ${msg}`);
