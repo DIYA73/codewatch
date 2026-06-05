@@ -66,6 +66,8 @@ open http://localhost:3000
 ---
 
 ## how it works
+
+## how it works
 PR opened on GitHub
 │
 ▼
@@ -79,6 +81,7 @@ ReviewProcessor
 ├─ GPT-4o analyzes PR
 ├─ posts GitHub comment
 └─ sends email summary
+
 ---
 
-MIT - DIYA73 🤖 .
+MIT - DIYA73 - built with heart.
